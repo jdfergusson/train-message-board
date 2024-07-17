@@ -354,29 +354,32 @@ DepartureBoard.Letter.prototype._tick = function () {
 	}
 };
 
-get_data = function() {
-	console.log("Hello");
-	var xhttp = new XMLHttpRequest();
-	xhttp.open("GET", "/update/");
-	xhttp.onload = function() {
-		console.log(this.responseText);
-	}
-	xhttp.send();
 
-	window.setTimeout(get_data, 10000);
-}
 
 		</script>
 
 		<script>
 
 			var board = new DepartureBoard (document.getElementById ('test'), { rowCount: 15, letterCount: 25 });
-			board.setValue (['19:30 London King\'s Cross', '19:42 Sheffield']);
 
-			window.setTimeout (function () {
-				get_data();
-			 	board.setValue ('19:42 Sheffield');
-			}, 10000);
+			var last_response_text = ""
+
+			get_data = function() {
+				var xhttp = new XMLHttpRequest();
+				xhttp.open("GET", "/update/");
+				xhttp.onload = function() {
+					response = JSON.parse(this.responseText);
+					if (response.new_text != last_response_text) {
+						board.setValue(response.new_text.split("\n"));
+						last_response_text = response.new_text
+					}
+				}
+				xhttp.send();
+
+				window.setTimeout(get_data, 1000);
+			}
+
+			get_data();
 
 		</script>
 	</body>

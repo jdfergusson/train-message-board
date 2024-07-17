@@ -1,0 +1,313 @@
+% <code>
+%=====================================================
+% Timetable data file for [livewires]
+% - input file to go with PHP timetable generator in
+%   the [[livewires]] DB
+% - contains info for both Team, YP and joint events
+% - PHP script decides whether to produce Team or YP
+%   version, not this file
+% - now adds info on who's leading the activity, for
+%   output in the team version.
+%
+% All fields are tab delimited.
+% Don't use ampersands - use plus signs instead!
+% First section needs to include the following lines
+%   C = RGB colour definitions [multiple allowed]
+%   Y = year that this file is for
+%   DT = number of days covered in the file (for team)
+%	DY = number of days covered in the file (for YP)
+% Blank lines ignored.  Comment lines start with %.
+% An activity of _DATE_ becomes the current date string
+%
+% Structure by Jonathan Clark, 26.6.2005
+%=====================================================
+% Latest update: 20.5.2006 by Jonathan - 2006 v3
+%=====================================================
+DT	5
+DY	8
+DO	8
+Y	2024
+% Colour definitions (R,G,B from 0 to 1):
+C	0	0	0	text
+C	0	0	0	box
+C	1	1	1	back
+C	0.7	0.7	0.7	grey
+C	0.5	0.5	0.5	darkgrey
+C	0.75	0.7	1	technical
+C	1	0.75	0.75	dining
+C	0.65	0.5	1	lounge
+C	0.5	0.73	0.94	team
+C	1	0.85	0.55	hall
+C	1	1	0.7	out
+C	0.6	1	0.4	dorm
+%=====================================================
+% Main timetable information.
+%
+% New days start with '----', and then give day of week,
+% day of month, month name, short name (if applicable),
+% and whether this is a 'T'eam only day or a 'TYO' day
+% for both Team and YP.
+% Each activity item has (in order):
+% - first has number of quarter-hour time units
+% - T/Y/TYO for who the activity is for (team/YP/both)
+% - colour name for the box (must be present above)
+% - text to put in the box
+% - leader of the activity (optional)
+%
+% The processor assumes entries come in strict time
+% order with no gaps between them. Gaps can be made by
+% having blank 4th and 5th fields.
+%=====================================================
+----	Sat	10th	August		T
+% key for team
+1	T	back	Key:
+2	T	dorm	In Dorms
+2	T	dining	In the Dining Room
+2	T	lounge	In the Lounge
+2	T	hall	In the Hall
+2	T	technical	In Technical Rooms
+2	T	out	Out and about
+2	T	team	In the Team Room
+% end of key
+1	T	back	_DATE_
+8	T	back
+3	T	out	Team arrive (bring + eat lunch)
+2	T	dining	Welcome and what's happening	co-l
+1	T	out	Site tour
+8	T	technical	Unpack cars, setting up technical rooms, hall, dorms + kitchens
+2	T	dining	Drinks
+6	T	technical	Unpack cars, setting up technical rooms, hall, dorms + kitchens
+4	T	dining	Dinner
+2	T	dining	Kitchen and pool trng
+2	T	out	Prayer for LW
+2	T	team	Night prayer
+4	T	dining	Free time (no setup allowed!)
+%=====================================================
+----	Sun	11th	August		TYO
+% key for YP
+1	YO	back	Key:
+2	YO	dorm	In Dorms
+2	YO	dining	In the Dining Room
+2	YO	hall	In the Hall
+2	YO	technical	In Technical Rooms
+2	YO	lounge	In the Lounge
+2	YO	out	Out and about
+1	YO	back	_DATE_
+23	YO	back
+% end of key (34 blocks)
+5	T	back
+1	T	dorm	Wake up
+2	T	dining	Breakfast
+2	T	lounge	Team Worship
+2	T	lounge	Spiritual programme
+2	T	dining	Safeguarding
+1	T	dining	Coffee
+3	T	dorm	Dorm preparation and prayer
+3	T	dining	Admin and safety
+3	T	technical	Tech setup
+3	T	dining	Lunch
+1	T	dining	DR setup
+2	T	hall	Music practice + soundcheck
+7	T	technical	Tech setup
+6	YO	out	Arrive!
+6	T	out	YP arrive
+5	TYO	dining	Dinner
+1	TYO	out	Free time
+5	TYO	hall	Welcome to LiveWires
+2	YO	dining	Drinks
+2	T	dining	Drinks + story
+% Evenings get complex!
+2	TY	dorm	Epilogue
+2	O	out	Epilogue
+2	O	lounge	Free time
+2	TYO	dorm	Time for bed
+1	YO	dorm	Lights out
+2	T	dining	Dorm patrol/Team Relax
+2	T	dining	Team relax
+1	T	dorm	Sleep
+%=====================================================
+----	Mon	12th	August		TYO
+3	TYO	back
+3	YO	dorm	Wake up
+1	T	dorm	Wake up
+2	T	dining	Pray + Team meet
+3	TYO	dining	Breakfast
+5	TYO	technical	Technical
+4	TYO	hall	The Link
+2	TYO	dining	Drinks, tuck
+5	TYO	technical	Technical
+4	TYO	dining	Lunch
+5	TYO	technical	Technical
+2	YO	dining	Drinks/Free Time
+2	T	team	Team Meet
+6	TYO	out	The zone
+1	TYO	out	Prep for dinner
+4	TYO	dining	Dinner
+3	TYO	out	Connect
+4	TYO	hall	The Link
+2	TYO	dining	Drinks
+% Evenings get complex!
+2	TY	dorm	Epilogue
+2	O	out	Epilogue
+2	O	lounge	Free time
+2	TYO	dorm	Time for bed
+1	YO	dorm	Lights out
+2	T	dining	Dorm patrol/Team Relax
+2	T	dining	Team relax
+1	T	dorm	Sleep
+%=====================================================
+----	Tue	13th	August		TYO
+3	TYO	back
+3	YO	dorm	Wake up
+1	T	dorm	Wake up
+2	T	dining	Pray + Team meet
+3	TYO	dining	Breakfast
+5	TYO	technical	Technical
+4	TYO	hall	The Link
+2	TYO	dining	Drinks, tuck
+5	TYO	technical	Technical
+4	TYO	dining	Lunch
+5	TYO	technical	Technical
+2	YO	dining	Drinks/Free Time
+2	T	team	Team Meet
+6	TYO	out	The zone
+1	TYO	out	Prep for dinner
+4	TYO	dining	Dinner
+3	TYO	out	Connect
+4	TYO	hall	The Link
+2	TYO	dining	Drinks
+% Evenings get complex!
+2	TY	dorm	Epilogue
+2	O	out	Epilogue
+2	O	lounge	Free time
+2	TYO	dorm	Time for bed
+1	YO	dorm	Lights out
+2	T	dining	Dorm patrol/Team Relax
+2	T	dining	Team relax
+1	T	dorm	Sleep
+%=====================================================
+----	Wed	14th	August		TYO
+3	TYO	back
+3	YO	dorm	Wake up
+1	T	dorm	Wake up
+2	T	dining	Pray + Team meet
+3	TYO	dining	Breakfast
+5	TYO	technical	Technical
+4	TYO	hall	The Link
+2	TYO	dining	Drinks, tuck
+5	TYO	technical	Technical
+4	TYO	dining	Lunch
+5	TYO	technical	Technical
+2	YO	dining	Drinks/Free Time
+2	T	team	Team Meet
+6	TYO	out	The zone
+1	TYO	out	Prep for dinner
+4	TYO	dining	Dinner
+3	TYO	out	Connect
+4	TYO	hall	The Link
+2	TYO	dining	Drinks
+% Evenings get complex!
+2	TY	dorm	Epilogue
+2	O	out	Epilogue
+2	O	lounge	Free time
+2	TYO	dorm	Time for bed
+1	YO	dorm	Lights out
+2	T	dining	Dorm patrol/Team Relax
+2	T	dining	Team relax
+1	T	dorm	Sleep
+%=====================================================
+----	Thu	15th	August		TYO
+3	TYO	back
+3	YO	dorm	Wake up
+1	T	dorm	Wake up
+2	T	dining	Pray + Team meet
+3	TYO	dining	Breakfast
+5	TYO	technical	Technical
+1	TYO	dining	Drinks
+27	TYO	out	Day Out
+2	TYO	out	Prep for dinner
+4	TYO	dining	Dinner
+6	TYO	hall	The Link
+2	TYO	dining	Drinks
+% Evenings get complex!
+2	TY	dorm	Epilogue
+2	O	out	Epilogue
+2	O	lounge	Free time
+2	TYO	dorm	Time for bed
+1	YO	dorm	Lights out
+2	T	dining	Dorm patrol/Team Relax
+2	T	dining	Team relax
+1	T	dorm	Sleep
+%=====================================================
+----	Fri	16th	August		TYO
+3	TYO	back
+3	YO	dorm	Wake up
+1	T	dorm	Wake up
+2	T	dining	Pray + Team meet
+3	TYO	dining	Breakfast
+5	TYO	technical	Technical
+4	TYO	hall	The Link
+2	TYO	dining	Drinks, tuck
+5	TYO	technical	Technical
+4	TYO	dining	Lunch
+5	TYO	technical	Technical
+2	YO	dining	Drinks/Free Time
+2	T	team	Team Meet
+6	TYO	out	The zone
+1	TYO	out	Prep for dinner
+4	TYO	dining	Dinner
+3	TYO	out	Connect
+4	TYO	hall	The Link
+2	TYO	dining	Drinks
+% Evenings get complex!
+2	TY	dorm	Epilogue
+2	O	out	Epilogue
+2	O	lounge	Free time
+2	TYO	dorm	Time for bed
+1	YO	dorm	Lights out
+2	T	dining	Dorm patrol/Team Relax
+2	T	dining	Team relax
+1	T	dorm	Sleep
+%=====================================================
+----	Sat	17th	August		TYO
+3	TYO	back
+3	YO	dorm	Wake up
+1	T	dorm	Wake up
+2	T	dining	Pray + Team meet
+3	TYO	dining	Breakfast
+5	TYO	technical	Technical
+4	TYO	hall	The Link
+2	TYO	dining	Drinks, tuck
+5	TYO	technical	Technical
+4	TYO	dining	Lunch
+1	T	technical	Team clearing prep
+1	YO	out	Free time
+3	TYO	technical	Clearing up 1
+1	TYO	dining	Drinks
+4	TYO	technical	Clearing up 2
+4	TYO	out	Swimming
+4	TYO	out	Prep / free time
+14	TYO	hall	Celebration
+2	TYO	dorm	Epilogue
+2	TYO	dorm	Time for bed
+1	YO	dorm	Lights out
+2	T	dining	Dorm patrol
+1	T	dining	Team prayer
+1	T	out	Continue de-rig
+%=====================================================
+----	Sun	18th	August		TYO
+2	TYO	back
+2	YO	dorm	Wake up
+1	T	dorm	Wake up
+1	TYO	dorm	Pack bags
+1	T	dining	Pray + meet
+4	TYO	dining	Breakfast
+2	TYO	hall	The Link
+4	YO	out	Depart :(
+4	T	out	YP depart + finish packing
+7	T	out	Cleaning and clearing dorms + hall area
+3	T	dining	Lunch
+3	T	out	DR + kitchen cleaning, loading cars
+1	T	out	Team depart
+% </code>
+

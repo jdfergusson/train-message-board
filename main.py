@@ -1,6 +1,8 @@
 import time
 import re
 import json
+import csv
+import datetime
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from functools import partial
 import urllib.parse as urlparser
@@ -9,6 +11,101 @@ import urllib.parse as urlparser
 HOST_NAME = 'localhost'
 PORT_NUMBER = 8000
 
+LINE_LENGTH = 25
+
+def line_span(a, b):
+    return a + b.rjust(LINE_LENGTH - len(a))
+
+class AbstractSlide:
+    def get_text(self):
+        return NotImplementedError
+    
+class ScoreSlide(AbstractSlide):
+    def __init__(self):
+        # Read scores from file
+        scores_dict = {}
+        with open("scores.csv", "r") as f:
+            reader = csv.reader(f)
+            for row in reader:
+                try:
+                    scores_dict[row[0]] = scores_dict.get(row[0], 0) + int(row[1])
+                except Exception:
+                    pass
+
+        self.scores = [[i, scores_dict[i]] for i in sorted(scores_dict)]
+
+    def get_text(self):
+        lines = ["Dorm points", "", line_span("Dorm", "Score"),]
+        for score in self.scores:
+            lines.append(line_span(score[0], str(score[1])))
+        return "\n".join(lines)
+    
+
+class TimetableSlide(AbstractSlide):
+    def __init__(self):
+        with open("lwtt-2024-1.0.txt", "r") as f:
+            raw_tt = f.read()
+        lines = raw_tt.split("\n")
+        # Remove comment lines
+        lines = [i.split("\t") for i in lines if not i.strip().startswith("%") and len(i.strip())]
+        # Split into days
+        days = []
+        day = []
+        for line in lines:
+            if line[0] != "----":
+                day.append(line)
+            else:
+                day = [i for i in day if "Y" in i[1]]
+                days.append(day)
+                day = []
+        
+        day = [i for i in day if "Y" in i[1]]
+        days.append(day)
+        days = days[1:]
+
+        start_time = datetime.time(hour=7, minute=0)
+        start_day = datetime.date(year=2024, month=7, day=15)
+
+        self.events = []
+        tracked_datetime = datetime.datetime.combine(start_day, start_time)
+        for day in days:
+            for item in day:
+                try:
+                    self.events.append([tracked_datetime, item[3]])
+                except IndexError:
+                    pass
+                m = 15 * int(item[0])
+                delta = datetime.timedelta(hours=(m // 60), minutes=(m % 60))
+                tracked_datetime += delta
+
+            tracked_datetime = datetime.datetime.combine(tracked_datetime.date(), start_time)
+            tracked_datetime += datetime.timedelta(days=1)
+
+    def get_text(self):
+        next_events = []
+        for event in self.events:
+            if event[0] > datetime.datetime.now():
+                if event[0].date() == datetime.datetime.now().date():
+                    next_events.append(event)
+        
+        if len(next_events) > 5:
+            next_events = next_events[:5]
+        
+        lines = []
+        lines.append("Timetable")
+        lines.append("")
+        for e in next_events:
+            lines.append("{} - {}".format(e[0].time().strftime("%H:%M"), e[1]))
+
+        return "\n".join(lines)
+    
+class TextSlide(AbstractSlide):
+    def __init__(self, text):
+        self.text = text
+
+    def get_text(self):
+        return self.text
+        
 
 class MyHandler(BaseHTTPRequestHandler):
     def __init__(self, server, *args, **kwargs):
@@ -31,6 +128,13 @@ class Server:
             (r'^/admin/?$', self.show_admin_page),
             (r'^/update/?$', self.get_data_update),
         ]
+        self._slides = [
+            TextSlide("Welcome to LiveWires 2024"),
+            TimetableSlide(),
+            ScoreSlide(),
+        ]
+        self.last_update = datetime.datetime.now()
+        self.slide_index = 0
 
     def serve_html_file(self, fname):
         with open(fname, "rb") as f:
@@ -49,7 +153,12 @@ class Server:
         return 200, "text/html", b"<html><h2>Admin</h2></html>"
 
     def get_data_update(self, params):
-        return 200, "application/json", bytes(json.dumps({"Hi": "JsonTest", "x": 7}), "utf-8")
+        now = datetime.datetime.now()
+        if now > self.last_update + datetime.timedelta(seconds=20):
+            self.slide_index = (self.slide_index + 1) % len(self._slides)
+            self.last_update = now
+        slide = self._slides[self.slide_index]
+        return 200, "application/json", bytes(json.dumps({"new_text": slide.get_text()}), "utf-8")
 
 if __name__ == '__main__':
     server = Server()
