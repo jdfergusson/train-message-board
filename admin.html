@@ -1,0 +1,51 @@
+<html>
+	<head>
+		<title>LW Display Admin</title>
+	</head>
+
+	<body>
+		<h2>Add/subtract points</h2>
+		<form>
+		<select name="dorm" id="dorm">
+			<option value="Rocket">Rocket</option>
+			<option value="Steam Elephant">Steam Elephant</option>
+			<option value="Flying Scotsman">Flying Scotsman</option>
+			<option value="Mallard">Mallard</option>
+			<option value="Tornado">Tornado</option>
+			<option value="Salamance">Salamanca</option>
+			<option value="Evening Star">Evening Star</option>
+			<option value="GKB 671">GKB 671</option>
+			<option value="Dutchess">Dutchess</option>
+		</select>
+
+		<input type="number" id="points-to-add" />
+
+		<button id="add-points" type="button">Submit</button>
+		</form>
+
+		<div id="points-feedback"></div>
+
+		<script type="text/javascript">
+
+			document.getElementById("add-points").onclick = sendScore;
+
+			function sendScore() {
+				const params = {
+					dorm: document.getElementById("dorm").value,
+					points: document.getElementById("points-to-add").value,
+				}
+
+				console.log(params);
+				var xhttp = new XMLHttpRequest();
+				xhttp.open("POST", "/score");
+				xhttp.setRequestHeader('Content-type', 'application/json');
+				xhttp.send(JSON.stringify(params));
+				xhttp.onload = function() {
+					response = JSON.parse(this.responseText);
+					console.log(response);
+					document.getElementById("points-feedback").innerHTML = response.feedback;
+				}
+			}
+		</script>
+	</body>
+</html>
