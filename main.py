@@ -3,15 +3,21 @@ import re
 import json
 import csv
 import datetime
+import jinja2
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from functools import partial
 import urllib.parse as urlparser
 
 
-HOST_NAME = 'localhost'
-PORT_NUMBER = 8000
+HOST_NAME = '0.0.0.0'
+PORT_NUMBER = 8080
 
 LINE_LENGTH = 25
+
+SLIDE_SECONDS = 30
+
+DORMS = ["Rocket", "Steam Elephant", "Flying Scotsman", "Mallard", 
+         "Tornado", "Salamanca", "Evening Star", "GKB 671", "Duchess of Hamilton"]
 
 def line_span(a, b):
     return a + b.rjust(LINE_LENGTH - len(a))
@@ -24,6 +30,8 @@ class ScoreSlide(AbstractSlide):
     def __init__(self):
         # Read scores from file
         scores_dict = {}
+        for i in DORMS:
+            scores_dict[i] = 0
         with open("scores.csv", "r") as f:
             reader = csv.reader(f)
             for row in reader:
@@ -35,13 +43,13 @@ class ScoreSlide(AbstractSlide):
         self.scores = [i for i in sorted(scores_dict.items(), key=lambda item: item[1])]
 
     def get_text(self):
-        lines = ["Dorm points", "", line_span("Dorm", "Score"),]
+        lines = ["Dorm points", "",]
         for score in self.scores:
             lines.append(line_span(score[0], str(score[1])))
         return "\n".join(lines)
 
     def get_html(self):
-        text = "<table>"
+        text = "<h3>Totals</h3><table>"
         for score in self.scores:
             text += "<tr><td>{}</td><td>{}</td></tr>".format(*score)
         text += "</table>"
@@ -141,11 +149,13 @@ class MyHandler(BaseHTTPRequestHandler):
 
 class Server:
     def __init__(self):
+        self.jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader("templates/"))
         self._urls = [
             (r'^/display/?$', self.show_display_page),
             (r'^/admin/?$', self.show_admin_page),
             (r'^/update/?$', self.get_data_update),
             (r'^/score$', self.update_score),
+            (r'^/updatetext$', self.update_custom_slides),
         ]
         self._timetable_slide = None
         self.last_update = datetime.datetime.now()
@@ -157,12 +167,24 @@ class Server:
         if self._timetable_slide is None:
             self._timetable_slide = TimetableSlide()
 
+        with open("textslides.txt", "r") as f:
+            self.raw_textslides_text = f.read()
+        textslides_text = self.raw_textslides_text.split("\n_\n")
+
         self._slides = [
             self._score_slide,
-            TextSlide("Welcome to LiveWires 2024"),
             self._timetable_slide,
         ]
+
+        for i in textslides_text:
+            self._slides.append(TextSlide(i))
+
         self.slide_index = min(self.slide_index, len(self._slides))
+
+    def serve_html_from_template(self, template_fname, context):
+        template = self.jinja_env.get_template(template_fname)
+        content = template.render(**context)
+        return 200, "text/html", bytes(content, "utf-8")
 
     def serve_html_file(self, fname):
         with open(fname, "rb") as f:
@@ -178,11 +200,15 @@ class Server:
         return self.serve_html_file("display.html")
 
     def show_admin_page(self, params):
-        return self.serve_html_file("admin.html")
+        context = {
+            "current_points": self._score_slide.get_html(),
+            "text_slide_contents": self.raw_textslides_text,
+        }
+        return self.serve_html_from_template("admin.html", context)
 
     def get_data_update(self, params):
         now = datetime.datetime.now()
-        if now > self.last_update + datetime.timedelta(seconds=20):
+        if now > self.last_update + datetime.timedelta(seconds=SLIDE_SECONDS):
             self.slide_index = (self.slide_index + 1) % len(self._slides)
             self.last_update = now
         slide = self._slides[self.slide_index]
@@ -198,6 +224,15 @@ class Server:
         feedback = "{} points {} dorm {}<br><br>{}".format(params["points"], word, params["dorm"], self._score_slide.get_html())
 
         return 200, "application/json", bytes(json.dumps({"feedback": feedback}), "utf-8")
+    
+    def update_custom_slides(self, data):
+        params = json.loads(data.decode("utf-8"))
+        if "text" not in params:
+            return 404, None, b""
+        with open("textslides.txt", "w") as f:
+            f.write(params["text"])
+        self._reload_slides()
+        return 200, "application/json", b""
 
 if __name__ == '__main__':
     server = Server()

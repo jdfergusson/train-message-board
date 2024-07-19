@@ -1,0 +1,72 @@
+<html>
+	<head>
+		<title>LW Display Admin</title>
+	</head>
+
+	<body>
+		<h2>Add/subtract points</h2>
+		<form>
+			<select name="dorm" id="dorm">
+				<option value="Rocket">Rocket</option>
+				<option value="Steam Elephant">Steam Elephant</option>
+				<option value="Flying Scotsman">Flying Scotsman</option>
+				<option value="Mallard">Mallard</option>
+				<option value="Tornado">Tornado</option>
+				<option value="Salamance">Salamanca</option>
+				<option value="Evening Star">Evening Star</option>
+				<option value="GKB 671">GKB 671</option>
+				<option value="Dutchess">Dutchess</option>
+			</select>
+
+			<input type="number" id="points-to-add" />
+
+			<button id="add-points" type="button">Submit</button>
+		</form>
+
+		<div id="points-feedback">{{ current_points }}</div>
+
+		<h2>Custom Slides</h2>
+		A line with a single underscore will add a slide break.
+		<form>
+			<textarea id="text-slides" style="max-width: 100%; width: 30em; height: 20em">{{ text_slide_contents }}</textarea>
+			<br />
+			<button id="update-text-slides" type="button">Update</button>
+
+			<div id="text-feedback"></div>
+		</form>
+
+		<script type="text/javascript">
+
+			document.getElementById("add-points").onclick = sendScore;
+			document.getElementById("update-text-slides").onclick = sendText;
+
+			function sendScore() {
+				const params = {
+					dorm: document.getElementById("dorm").value,
+					points: document.getElementById("points-to-add").value,
+				}
+
+				var xhttp = new XMLHttpRequest();
+				xhttp.open("POST", "/score");
+				xhttp.setRequestHeader('Content-type', 'application/json');
+				xhttp.send(JSON.stringify(params));
+				xhttp.onload = function() {
+					response = JSON.parse(this.responseText);
+					document.getElementById("points-feedback").innerHTML = response.feedback;
+				}
+			}
+
+			function sendText() {
+				const params = {text: document.getElementById("text-slides").value}
+				var xhttp = new XMLHttpRequest();
+				xhttp.open("POST", "/updatetext");
+				xhttp.setRequestHeader('Content-type', 'application/json');
+				xhttp.send(JSON.stringify(params));
+				xhttp.onload = function() {
+					document.getElementById("text-feedback").innerHTML = "Success"
+
+				}
+			}
+		</script>
+	</body>
+</html>
