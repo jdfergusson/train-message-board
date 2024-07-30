@@ -16,7 +16,7 @@ LINE_LENGTH = 25
 
 SLIDE_SECONDS = 30
 
-DORMS = ["Rocket", "Steam Elephant", "Flying Scotsman", "Mallard", 
+DORMS = ["Rocket", "Steam Elephant", "Flying Scotsman", "Mallard",
          "Tornado", "Salamanca", "Evening Star", "GKB 671", "Duchess of Hamilton"]
 
 def line_span(a, b):
@@ -25,6 +25,9 @@ def line_span(a, b):
 class AbstractSlide:
     def get_text(self):
         return NotImplementedError
+
+    def can_display(self):
+        return True
 
 class ScoreSlide(AbstractSlide):
     def __init__(self):
@@ -54,6 +57,19 @@ class ScoreSlide(AbstractSlide):
             text += "<tr><td>{}</td><td>{}</td></tr>".format(*score)
         text += "</table>"
         return text
+
+
+class TimedSlide(AbstractSlide):
+    def __init__(self, d):
+        self.start_time = datetime.datetime.strptime(d['start'], '%Y-%m-%d %H:%M')
+        self.end_time = datetime.datetime.strptime(d['end'], '%Y-%m-%d %H:%M')
+        self.text = d['message']
+
+    def can_display(self):
+        return self.start_time <= datetime.datetime.now() <= self.end_time
+
+    def get_text(self):
+        return self.text
 
 
 class TimetableSlide(AbstractSlide):
@@ -179,6 +195,12 @@ class Server:
         for i in textslides_text:
             self._slides.append(TextSlide(i))
 
+        with open('timed-slides.json', 'r') as f:
+            timed = json.load(f)
+
+        for i in timed:
+            self._slides.append(TimedSlide(i))
+
         self.slide_index = min(self.slide_index, len(self._slides))
 
     def serve_html_from_template(self, template_fname, context):
@@ -209,7 +231,10 @@ class Server:
     def get_data_update(self, params):
         now = datetime.datetime.now()
         if now > self.last_update + datetime.timedelta(seconds=SLIDE_SECONDS):
-            self.slide_index = (self.slide_index + 1) % len(self._slides)
+            while True:
+                self.slide_index = (self.slide_index + 1) % len(self._slides)
+                if self._slides[self.slide_index].can_display():
+                    break
             self.last_update = now
         slide = self._slides[self.slide_index]
         return 200, "application/json", bytes(json.dumps({"new_text": slide.get_text()}), "utf-8")
@@ -224,7 +249,7 @@ class Server:
         feedback = "{} points {} dorm {}<br><br>{}".format(params["points"], word, params["dorm"], self._score_slide.get_html())
 
         return 200, "application/json", bytes(json.dumps({"feedback": feedback}), "utf-8")
-    
+
     def update_custom_slides(self, data):
         params = json.loads(data.decode("utf-8"))
         if "text" not in params:
