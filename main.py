@@ -95,7 +95,7 @@ class TimetableSlide(AbstractSlide):
         days = days[1:]
 
         start_time = datetime.time(hour=7, minute=0)
-        start_day = datetime.date(year=2024, month=7, day=15)
+        start_day = datetime.date(year=2024, month=8, day=10)
 
         self.events = []
         tracked_datetime = datetime.datetime.combine(start_day, start_time)
