@@ -4,33 +4,88 @@ import json
 import csv
 import datetime
 import jinja2
+import matplotlib.pyplot as plt
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from functools import partial
 import urllib.parse as urlparser
+from qbstyles import mpl_style
+
+from gameoflife import create_initial_grid, create_next_grid
 
 
-HOST_NAME = '0.0.0.0'
-PORT_NUMBER = 8080
+HOST_NAME = 'localhost'
+PORT_NUMBER = 8081
 
 LINE_LENGTH = 25
 
-SLIDE_SECONDS = 30
+SLIDE_SECONDS = 15
 
-DORMS = ["Rocket", "Steam Elephant", "Flying Scotsman", "Mallard",
-         "Tornado", "Salamanca", "Evening Star", "GKB 671", "Duchess of Hamilton"]
+DORMS = [
+    "Charollais",
+    "Primera",
+    "Merino",
+    "Masham",
+    "Beltex",
+    "Dorper",
+    "Llanwenog",
+    "Meatlinc",
+    "Lonk",
+    "Zwartbles",
+    "Torwen Badger-Face",
+]
 
 def line_span(a, b):
     return a + b.rjust(LINE_LENGTH - len(a))
 
 class AbstractSlide:
+    def __init__(self):
+        self.slide_time = SLIDE_SECONDS
+
     def get_text(self):
         return NotImplementedError
+
+    def render_lines(self, lines):
+        s = f"<h2>{lines.pop(0)}</h2>"
+        for line in lines:
+            s += f"<h3>{line}</h3>"
+
+        return s
 
     def can_display(self):
         return True
 
-class ScoreSlide(AbstractSlide):
+class GameOfLifeSlide(AbstractSlide):
     def __init__(self):
+        super().__init__()
+        self.grid = create_initial_grid(40, 100)
+        self.last_update = time.time_ns()
+
+    def render_grid(self):
+        s = ""
+        for row in self.grid:
+            for cell in row:
+                if cell:
+                    s += '█'
+                else:
+                    s += '&nbsp;'
+            s += "<br>"
+        return s
+
+    def get_text(self):
+        if time.time_ns() > self.last_update + 30 * 1000 * 1000 * 1000:
+            new_grid = create_initial_grid(40, 100)
+            create_next_grid(40, 100, self.grid, new_grid)
+            self.grid = new_grid
+            self.last_update = time.time_ns()
+
+        return '<div class="gol">{}<br>hello</div>'.format(self.render_grid())
+
+
+class ScoreSlide(AbstractSlide):
+    def __init__(self, sort=False):
+        super().__init__()
+        self.slide_time = 30
+        self._sort = sort
         # Read scores from file
         scores_dict = {}
         for i in DORMS:
@@ -43,16 +98,51 @@ class ScoreSlide(AbstractSlide):
                 except Exception:
                     pass
 
-        self.scores = [i for i in sorted(scores_dict.items(), key=lambda item: item[1])]
+        if self._sort:
+            self.scores = [i for i in sorted(scores_dict.items(), key=lambda item: item[1])]
+        else:
+            self.scores = [i for i in scores_dict.items()]
+
+        self.generate_bar_chart()
+
+    def generate_bar_chart(self):
+        dorms = [i[0] for i in self.scores]
+        points = [i[1] for i in self.scores]
+        #mpl_style(dark=True)
+        plt.style.use("dark_background")
+        fig, ax = plt.subplots()
+        ypos = [i*0.5 for i in range(len(self.scores))]
+        ax.barh(ypos, points, height=0.3)
+        ax.set_yticks(ypos, labels=dorms)
+        ax.invert_yaxis()
+        ax.axvline(x=0, color='white')
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['bottom'].set_visible(False)
+        ax.spines['left'].set_visible(False)
+        ax.tick_params(top=False,
+               bottom=False,
+               left=False,
+               right=False,
+               labelleft=True,
+               labelbottom=True)
+        ax.patch.set_alpha(0.)
+        fig.set_size_inches(5,3)
+        fig.tight_layout()
+        fig.patch.set_alpha(0.)
+        fig.savefig("assets/dorm-points.svg")
+        self.last_barchart = time.time_ns()
 
     def get_text(self):
+        return self.render_lines(["Dorm points", '<img src="assets/dorm-points.svg?{}">'.format(self.last_barchart)])
+        return self.get_html()
         lines = ["Dorm points", "",]
         for score in self.scores:
             lines.append(line_span(score[0], str(score[1])))
-        return "\n".join(lines)
+        return self.render_lines(lines)
 
     def get_html(self):
-        text = "<h3>Totals</h3><table>"
+        text = "<h2>Dorm Points</h2><table>"
         for score in self.scores:
             text += "<tr><td>{}</td><td>{}</td></tr>".format(*score)
         text += "</table>"
@@ -61,6 +151,7 @@ class ScoreSlide(AbstractSlide):
 
 class TimedSlide(AbstractSlide):
     def __init__(self, d):
+        super().__init__()
         self.start_time = datetime.datetime.strptime(d['start'], '%Y-%m-%d %H:%M')
         self.end_time = datetime.datetime.strptime(d['end'], '%Y-%m-%d %H:%M')
         self.text = d['message']
@@ -69,12 +160,14 @@ class TimedSlide(AbstractSlide):
         return self.start_time <= datetime.datetime.now() <= self.end_time
 
     def get_text(self):
-        return self.text
+        return self.render_lines(self.text.split("\n"))
+        #return self.text
 
 
 class TimetableSlide(AbstractSlide):
     def __init__(self):
-        with open("lwtt-2024-1.0.txt", "r") as f:
+        super().__init__()
+        with open("lwtt-2025-1.1.txt", "r") as f:
             raw_tt = f.read()
         lines = raw_tt.split("\n")
         # Remove comment lines
@@ -95,7 +188,8 @@ class TimetableSlide(AbstractSlide):
         days = days[1:]
 
         start_time = datetime.time(hour=7, minute=0)
-        start_day = datetime.date(year=2024, month=7, day=15)
+        # Timetable starts on the Saturday
+        start_day = datetime.date(year=2025, month=8, day=9)
 
         self.events = []
         tracked_datetime = datetime.datetime.combine(start_day, start_time)
@@ -128,14 +222,16 @@ class TimetableSlide(AbstractSlide):
         for e in next_events:
             lines.append("{} - {}".format(e[0].time().strftime("%H:%M"), e[1]))
 
-        return "\n".join(lines)
+        return self.render_lines(lines)
 
 class TextSlide(AbstractSlide):
     def __init__(self, text):
+        super().__init__()
         self.text = text
 
     def get_text(self):
-        return self.text
+        return self.render_lines(self.text.split("\n"))
+        #return self.text
 
 
 class MyHandler(BaseHTTPRequestHandler):
@@ -172,8 +268,10 @@ class Server:
             (r'^/update/?$', self.get_data_update),
             (r'^/score$', self.update_score),
             (r'^/updatetext$', self.update_custom_slides),
+            (r'^/assets/.*', self.serve_asset),
         ]
         self._timetable_slide = None
+        #self._game_of_life_slide = GameOfLifeSlide()
         self.last_update = datetime.datetime.now()
         self.slide_index = 0
         self._reload_slides()
@@ -188,6 +286,7 @@ class Server:
         textslides_text = self.raw_textslides_text.split("\n_\n")
 
         self._slides = [
+            #self._game_of_life_slide,
             self._score_slide,
             self._timetable_slide,
         ]
@@ -208,6 +307,14 @@ class Server:
         content = template.render(**context)
         return 200, "text/html", bytes(content, "utf-8")
 
+    def serve_asset(self, path, params):
+        if path.endswith("svg"):
+            mimetype="image/svg+xml"
+        else:
+            mimetype="file"
+        with open("." + path, "rb") as f:
+            return 200, mimetype, f.read()
+
     def serve_html_file(self, fname):
         with open(fname, "rb") as f:
             return 200, "text/html", f.read()
@@ -215,22 +322,25 @@ class Server:
     def serve(self, path, params):
         for url in self._urls:
             if re.fullmatch(url[0], path):
-                return url[1](params)
+                return url[1](path, params)
         return 404, None, b""
 
-    def show_display_page(self, params):
+    def show_display_page(self, path, params):
         return self.serve_html_file("display.html")
 
-    def show_admin_page(self, params):
+    def show_admin_page(self, path, params):
         context = {
             "current_points": self._score_slide.get_html(),
             "text_slide_contents": self.raw_textslides_text,
+            "dorms": DORMS,
         }
         return self.serve_html_from_template("admin.html", context)
 
-    def get_data_update(self, params):
+    def get_data_update(self, path, params):
         now = datetime.datetime.now()
-        if now > self.last_update + datetime.timedelta(seconds=SLIDE_SECONDS):
+        slide_seconds = self._slides[self.slide_index].slide_time
+        slide_timedelta = datetime.timedelta(seconds=slide_seconds)
+        if now > self.last_update + slide_timedelta:
             while True:
                 self.slide_index = (self.slide_index + 1) % len(self._slides)
                 if self._slides[self.slide_index].can_display():
@@ -239,7 +349,7 @@ class Server:
         slide = self._slides[self.slide_index]
         return 200, "application/json", bytes(json.dumps({"new_text": slide.get_text()}), "utf-8")
 
-    def update_score(self, data):
+    def update_score(self, path, data):
         params = json.loads(data.decode("utf-8"))
         word = "added to" if int(params["points"]) >= 0 else "subtracted from"
         if int(params["points"]) != 0:
@@ -250,7 +360,7 @@ class Server:
 
         return 200, "application/json", bytes(json.dumps({"feedback": feedback}), "utf-8")
 
-    def update_custom_slides(self, data):
+    def update_custom_slides(self, path, data):
         params = json.loads(data.decode("utf-8"))
         if "text" not in params:
             return 404, None, b""

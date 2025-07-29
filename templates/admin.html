@@ -7,15 +7,9 @@
 		<h2>Add/subtract points</h2>
 		<form>
 			<select name="dorm" id="dorm">
-				<option value="Rocket">Rocket</option>
-				<option value="Steam Elephant">Steam Elephant</option>
-				<option value="Flying Scotsman">Flying Scotsman</option>
-				<option value="Mallard">Mallard</option>
-				<option value="Tornado">Tornado</option>
-				<option value="Salamance">Salamanca</option>
-				<option value="Evening Star">Evening Star</option>
-				<option value="GKB 671">GKB 671</option>
-				<option value="Dutchess">Dutchess</option>
+				{% for dorm in dorms %}
+					<option value="{{ dorm }}">{{ dorm }}</option>
+				{% endfor %}
 			</select>
 
 			<input type="number" id="points-to-add" />
