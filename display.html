@@ -1,6 +1,7 @@
 <!doctype html>
 <html>
 	<head>
+		<meta charset="utf-8">
 		<title>LW Display</title>
 		<style>
 
@@ -8,6 +9,25 @@
   font-family: cloud-font;
   src: url("assets/cloud-font.woff2");
 }
+
+
+@font-face {
+  font-family: shine-typewriter;
+  src: url("assets/ShineTypewriter.woff2");
+}
+
+
+@font-face {
+  font-family: tox-typewriter;
+  src: url("assets/ToxTypewriter.woff2");
+}
+
+@font-face {
+  font-family: vtRemingtonPortable;
+  src: url("assets/vtRemingtonPortable.woff2");
+}
+
+
 
 @font-face {
   font-family: hunny-bummy;
@@ -23,21 +43,21 @@ body {
 	padding: 0;
 	margin: 0;
 
-	background: url("assets/xp.png");
+	background: url("assets/paper-bg.jpg");
 	background-color: rgb(30,30,30);
 	background-position: center;
 	background-repeat: no-repeat;
 	background-size: contain;
-	color: #FFFFFF;
+	color: #000000;
 }
 
 h2 {
-	font-family: cloud-font, sans-serif;
+	font-family: vtRemingtonPortable, sans-serif;
 	font-size: 70px;
 }
 
 h3 {
-	font-family: hunny-bummy, sans-serif;
+	font-family: vtRemingtonPortable, sans-serif;
 	font-size: 60px;
 	margin-bottom: 20px;
 	margin-top: 20px;
@@ -53,25 +73,30 @@ h3 {
 	margin-left: -640px;
 	text-align: center;
 	border-radius: 40px;
-	background-color: #00000077;
+	/*background-color: #00000077;*/
 	padding: 40px;
 }
 
 #changing-text {
-
-	-webkit-transition: opacity .5s ease-in-out;
-	-moz-transition: opacity .5s ease-in-out;
-	-ms-transition: opacity .5s ease-in-out;
-	-o-transition: opacity .5s ease-in-out;
-	transition: opacity .5s ease-in-out;
+	text-align: left;
 }
 
 .gol {
 	font-family: "Noto Sans Mono", monospace;
 }
 
+.score-list {
+	font-family: vtRemingtonPortable, monospace;
+	font-size: 40px;
+	white-space: pre;
+}
+
 img {
 	width: 100%;
+}
+
+.header-img {
+	width: 90%;
 }
 
 
@@ -83,8 +108,9 @@ img {
 	<body>
 		<center>
 			<div id="main-container">
+				<img class="header-img" src="assets/header.svg">
 				<div id="changing-text">
-					<h2>Hello world</h2>
+					<h2></h2>
 				</div>
 			</div>
 		</center>
@@ -96,6 +122,171 @@ img {
 
 			var last_response_text = ""
 
+			// Bumped every time a new update supersedes an in-flight
+			// delete/type animation, so the old animation's steps can
+			// detect they've been superseded and stop touching the DOM
+			// instead of racing the new animation and leaving stray
+			// leftover content behind.
+			var currentEpoch = 0;
+
+			// Delete-then-type animation, capped so huge content (eg. the
+			// game of life grid) still finishes in a reasonable time.
+			var MIN_CHAR_DELAY = 15;
+			var MAX_CHAR_DELAY = 80;
+			var MAX_PHASE_DURATION = 4000;
+
+			function charDelay(charCount) {
+				if (charCount === 0) return MAX_CHAR_DELAY;
+				var delay = MAX_PHASE_DURATION / charCount;
+				return Math.max(MIN_CHAR_DELAY, Math.min(MAX_CHAR_DELAY, delay));
+			}
+
+			function getTextNodes(node) {
+				var walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+				var nodes = [];
+				var n;
+				while (n = walker.nextNode()) nodes.push(n);
+				return nodes;
+			}
+
+			function deleteContent(container, epoch, callback) {
+				var textNodes = getTextNodes(container);
+				var charCount = textNodes.reduce(function(sum, n) { return sum + n.nodeValue.length; }, 0);
+				var delay = charDelay(charCount);
+				var i = textNodes.length - 1;
+
+				function step() {
+					if (epoch !== currentEpoch) return;
+					while (i >= 0 && textNodes[i].nodeValue.length === 0) i--;
+					if (i < 0) {
+						callback();
+						return;
+					}
+					textNodes[i].nodeValue = textNodes[i].nodeValue.slice(0, -1);
+					setTimeout(step, delay);
+				}
+				step();
+			}
+
+			function typeContent(container, html, epoch, callback) {
+				container.innerHTML = "";
+				var temp = document.createElement("div");
+				temp.innerHTML = html;
+
+				var queue = [];
+				function buildQueue(srcParent, destParent) {
+					srcParent.childNodes.forEach(function(srcNode) {
+						if (srcNode.nodeType === Node.TEXT_NODE) {
+							var destText = document.createTextNode("");
+							queue.push(function() { destParent.appendChild(destText); });
+							var text = srcNode.nodeValue;
+							for (var i = 0; i < text.length; i++) {
+								(function(ch) {
+									queue.push(function() { destText.nodeValue += ch; });
+								})(text[i]);
+							}
+						} else if (srcNode.nodeType === Node.ELEMENT_NODE) {
+							var destEl = document.createElement(srcNode.tagName);
+							for (var j = 0; j < srcNode.attributes.length; j++) {
+								var attr = srcNode.attributes[j];
+								destEl.setAttribute(attr.name, attr.value);
+							}
+							queue.push(function() { destParent.appendChild(destEl); });
+							buildQueue(srcNode, destEl);
+						}
+					});
+				}
+				buildQueue(temp, container);
+
+				var delay = charDelay(queue.length);
+				var idx = 0;
+				function step() {
+					if (epoch !== currentEpoch) return;
+					if (idx >= queue.length) {
+						callback && callback();
+						return;
+					}
+					queue[idx]();
+					idx++;
+					setTimeout(step, delay);
+				}
+				step();
+			}
+
+			// Predicts where text will naturally wrap once fully typed, and
+			// bakes those wraps in as explicit <br> tags. Without this, a
+			// word being typed at the end of a line grows there until it no
+			// longer fits, then jumps whole to the next line.
+			function insertLineBreaksInElement(el) {
+				var hasElementChild = false;
+				el.childNodes.forEach(function(n) {
+					if (n.nodeType === Node.ELEMENT_NODE) hasElementChild = true;
+				});
+				if (hasElementChild) {
+					Array.prototype.slice.call(el.children).forEach(insertLineBreaksInElement);
+					return;
+				}
+
+				var text = el.textContent;
+				if (!text || !text.trim()) return;
+
+				var parts = text.split(/(\s+)/);
+				el.innerHTML = "";
+				var spans = [];
+				parts.forEach(function(part) {
+					if (part === "") return;
+					if (part.trim() === "") {
+						el.appendChild(document.createTextNode(part));
+					} else {
+						var span = document.createElement("span");
+						span.textContent = part;
+						el.appendChild(span);
+						spans.push(span);
+					}
+				});
+
+				var breaksBeforeWord = [];
+				for (var i = 1; i < spans.length; i++) {
+					if (spans[i].offsetTop > spans[i - 1].offsetTop) {
+						breaksBeforeWord.push(i);
+					}
+				}
+				var breakSet = {};
+				breaksBeforeWord.forEach(function(i) { breakSet[i] = true; });
+
+				var frag = document.createDocumentFragment();
+				var wordIdx = 0;
+				parts.forEach(function(part) {
+					if (part === "") return;
+					if (part.trim() === "") {
+						frag.appendChild(document.createTextNode(part));
+					} else {
+						if (breakSet[wordIdx]) frag.appendChild(document.createElement("br"));
+						frag.appendChild(document.createTextNode(part));
+						wordIdx++;
+					}
+				});
+				el.innerHTML = "";
+				el.appendChild(frag);
+			}
+
+			function predictLineBreaks(container, html) {
+				var measurer = document.createElement("div");
+				measurer.style.position = "absolute";
+				measurer.style.visibility = "hidden";
+				measurer.style.left = "0";
+				measurer.style.top = "0";
+				measurer.style.width = getComputedStyle(container).width;
+				measurer.innerHTML = html;
+				document.body.appendChild(measurer);
+
+				insertLineBreaksInElement(measurer);
+
+				var result = measurer.innerHTML;
+				document.body.removeChild(measurer);
+				return result;
+			}
+
 			get_data = function() {
 				var xhttp = new XMLHttpRequest();
 				xhttp.open("GET", "/update/");
@@ -104,14 +295,13 @@ img {
 					if (response.new_text != last_response_text) {
 						last_response_text = response.new_text
 						console.log(response.new_text);
+						currentEpoch++;
+						var epoch = currentEpoch;
 						c = document.getElementById('changing-text');
-						c.style.opacity = 0;
-						setTimeout(function(){
-							c.innerHTML = response.new_text;
-							c.style.opacity = 1;
-						}, 500);
-
-
+						var wrapped = predictLineBreaks(c, response.new_text);
+						deleteContent(c, epoch, function() {
+							typeContent(c, wrapped, epoch);
+						});
 					}
 				}
 				xhttp.send();

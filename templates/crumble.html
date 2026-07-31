@@ -1,0 +1,108 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>LW Display</title>
+		<style>
+
+@font-face {
+  font-family: cloud-font;
+  src: url("assets/cloud-font.woff2");
+}
+
+
+@font-face {
+  font-family: shine-typewriter;
+  src: url("assets/ShineTypewriter.woff2");
+}
+
+
+@font-face {
+  font-family: tox-typewriter;
+  src: url("assets/ToxTypewriter.woff2");
+}
+
+@font-face {
+  font-family: vtRemingtonPortable;
+  src: url("assets/vtRemingtonPortable.woff2");
+}
+
+
+
+@font-face {
+  font-family: hunny-bummy;
+  src: url("assets/HunnyBummy.woff");
+}
+
+html {
+height: 100%;
+}
+
+body {
+	height: 100%;
+	padding: 0;
+	margin: 0;
+
+	background: url("assets/paper-bg.jpg");
+	background-color: rgb(30,30,30);
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: contain;
+	color: #000000;
+}
+
+h2 {
+	font-family: vtRemingtonPortable, sans-serif;
+	font-size: 70px;
+}
+
+h3 {
+	font-family: vtRemingtonPortable, sans-serif;
+	font-size: 60px;
+	margin-bottom: 20px;
+	margin-top: 20px;
+}
+
+#main-container {
+	position: absolute;
+	height: 900px;
+	width: 1200px;
+	top: 50%;
+	left: 50%;
+	margin-top: -490px;
+	margin-left: -640px;
+	text-align: center;
+	border-radius: 40px;
+	/*background-color: #00000077;*/
+	padding: 40px;
+}
+
+#changing-text {
+	text-align: left;
+}
+
+img {
+	width: 100%;
+}
+
+.header-img {
+	width: 90%;
+}
+
+
+		</style>
+	</head>
+
+
+
+	<body>
+		<center>
+			<div id="main-container">
+				<img class="header-img" src="assets/header.svg">
+				<div id="changing-text">
+					{{ content | safe }}
+				</div>
+			</div>
+		</center>
+	</body>
+</html>

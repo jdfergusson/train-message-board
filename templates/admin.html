@@ -1,66 +1,589 @@
 <html>
 	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<title>LW Display Admin</title>
+		<style>
+			:root {
+				--bg: #f2f2f5;
+				--card-bg: #ffffff;
+				--text: #1a1a1a;
+				--muted: #6b6b6b;
+				--border: #e0e0e0;
+				--accent: #2f6feb;
+				--accent-text: #ffffff;
+				--danger: #d9534f;
+				--shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+			}
+
+			@media (prefers-color-scheme: dark) {
+				:root {
+					--bg: #17181c;
+					--card-bg: #24262b;
+					--text: #f0f0f0;
+					--muted: #9a9a9a;
+					--border: #3a3b40;
+					--accent: #4c8bf5;
+					--accent-text: #ffffff;
+					--danger: #e2665f;
+					--shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+				}
+			}
+
+			* {
+				box-sizing: border-box;
+			}
+
+			body {
+				margin: 0;
+				padding: 16px 16px 48px;
+				background: var(--bg);
+				color: var(--text);
+				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+				max-width: 560px;
+				margin-left: auto;
+				margin-right: auto;
+			}
+
+			h1 {
+				font-size: 1.4em;
+				margin: 4px 0 16px;
+			}
+
+			h2 {
+				font-size: 1.1em;
+				margin: 28px 0 10px;
+			}
+
+			.card {
+				background: var(--card-bg);
+				border-radius: 14px;
+				box-shadow: var(--shadow);
+				padding: 14px;
+			}
+
+			.dorm-list {
+				display: flex;
+				flex-direction: column;
+			}
+
+			.dorm-row {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 12px;
+				padding: 14px 4px;
+				border-bottom: 1px solid var(--border);
+			}
+
+			.dorm-row:last-child {
+				border-bottom: none;
+			}
+
+			.dorm-name {
+				font-weight: 600;
+				flex: 1;
+			}
+
+			.dorm-score {
+				color: var(--muted);
+				font-variant-numeric: tabular-nums;
+				font-size: 1.1em;
+				min-width: 2.5em;
+				text-align: right;
+			}
+
+			.modal-backdrop {
+				position: fixed;
+				inset: 0;
+				background: rgba(0, 0, 0, 0.5);
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				padding: 20px;
+				opacity: 0;
+				pointer-events: none;
+				transition: opacity 0.15s ease-in-out;
+				z-index: 100;
+			}
+
+			.modal-backdrop.visible {
+				opacity: 1;
+				pointer-events: auto;
+			}
+
+			.modal {
+				background: var(--card-bg);
+				border-radius: 14px;
+				padding: 20px;
+				width: 100%;
+				max-width: 320px;
+				box-shadow: var(--shadow);
+				transform: translateY(8px);
+				transition: transform 0.15s ease-in-out;
+			}
+
+			.modal-backdrop.visible .modal {
+				transform: translateY(0);
+			}
+
+			.modal-title {
+				font-weight: 600;
+				font-size: 1.2em;
+				text-align: center;
+			}
+
+			.modal-current-score {
+				color: var(--muted);
+				font-size: 0.85em;
+				text-align: center;
+				margin: 2px 0 12px;
+			}
+
+			.modal-input {
+				width: 100%;
+				font-size: 1.6em;
+				text-align: center;
+				padding: 10px;
+				border-radius: 10px;
+				border: 1px solid var(--border);
+				background: var(--bg);
+				color: var(--text);
+				font-family: inherit;
+				margin-bottom: 14px;
+			}
+
+			.modal-actions {
+				display: flex;
+				gap: 10px;
+			}
+
+			.modal-btn {
+				flex: 1;
+				padding: 12px;
+				border-radius: 10px;
+				border: none;
+				font-size: 1em;
+				font-weight: 600;
+			}
+
+			.modal-btn.secondary {
+				background: var(--border);
+				color: var(--text);
+			}
+
+			.modal-btn.primary {
+				background: var(--accent);
+				color: var(--accent-text);
+			}
+
+			.modal-textarea {
+				width: 100%;
+				min-height: 8em;
+				border-radius: 10px;
+				border: 1px solid var(--border);
+				background: var(--bg);
+				color: var(--text);
+				padding: 10px;
+				font-family: inherit;
+				font-size: 1em;
+				margin-bottom: 14px;
+				resize: vertical;
+			}
+
+			.primary-btn {
+				margin-top: 10px;
+				padding: 12px 20px;
+				border: none;
+				border-radius: 10px;
+				background: var(--accent);
+				color: var(--accent-text);
+				font-size: 1em;
+				font-weight: 600;
+				width: 100%;
+			}
+
+			.slides-list {
+				display: flex;
+				flex-direction: column;
+				gap: 10px;
+			}
+
+			.slide-tile {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				background: var(--card-bg);
+				border: 1px solid var(--border);
+				border-radius: 12px;
+				padding: 10px 12px;
+				box-shadow: var(--shadow);
+			}
+
+			.slide-tile.dragging {
+				opacity: 0.5;
+			}
+
+			.slide-handle {
+				flex: none;
+				font-size: 1.3em;
+				color: var(--muted);
+				padding: 4px 6px;
+				cursor: grab;
+				touch-action: none;
+				user-select: none;
+			}
+
+			.slide-info {
+				flex: 1;
+				min-width: 0;
+			}
+
+			.slide-title {
+				font-weight: 600;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+
+			.slide-subtitle {
+				color: var(--muted);
+				font-size: 0.85em;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+
+			.slide-remove {
+				flex: none;
+				width: 32px;
+				height: 32px;
+				border-radius: 50%;
+				border: none;
+				background: var(--bg);
+				color: var(--danger);
+				font-size: 1.2em;
+				line-height: 1;
+			}
+
+			.hint {
+				color: var(--muted);
+				font-size: 0.85em;
+				margin: 4px 0 0;
+			}
+
+			#toast {
+				position: fixed;
+				left: 50%;
+				bottom: 24px;
+				transform: translate(-50%, 0);
+				background: var(--text);
+				color: var(--bg);
+				padding: 10px 18px;
+				border-radius: 999px;
+				font-size: 0.95em;
+				opacity: 0;
+				pointer-events: none;
+				transition: opacity 0.2s ease-in-out;
+			}
+
+			#toast.visible {
+				opacity: 1;
+			}
+		</style>
 	</head>
 
 	<body>
-		<h2>Add/subtract points</h2>
-		<form>
-			<select name="dorm" id="dorm">
-				{% for dorm in dorms %}
-					<option value="{{ dorm }}">{{ dorm }}</option>
-				{% endfor %}
-			</select>
+		<h1>Dorm Points</h1>
+		<p class="hint">Tap a dorm, type points to add (or a negative number to subtract), then press enter.</p>
 
-			<input type="number" id="points-to-add" />
+		<div class="card dorm-list">
+			{% for dorm in dorms %}
+				<div class="dorm-row" data-dorm="{{ dorm }}">
+					<span class="dorm-name">{{ dorm }}</span>
+					<span class="dorm-score" data-dorm="{{ dorm }}">{{ scores[dorm] }}</span>
+				</div>
+			{% endfor %}
+		</div>
 
-			<button id="add-points" type="button">Submit</button>
-		</form>
-
-		<div id="points-feedback">{{ current_points }}</div>
+		<div class="modal-backdrop" id="modal-backdrop">
+			<div class="modal">
+				<div class="modal-title" id="modal-dorm-name"></div>
+				<div class="modal-current-score" id="modal-current-score"></div>
+				<input type="number" inputmode="numeric" class="modal-input" id="modal-input">
+				<div class="modal-actions">
+					<button type="button" class="modal-btn secondary" id="modal-cancel">Cancel</button>
+					<button type="button" class="modal-btn primary" id="modal-confirm">Add</button>
+				</div>
+			</div>
+		</div>
 
 		<h2>Custom Slides</h2>
-		A line with a single underscore will add a slide break.
-		<form>
-			<textarea id="text-slides" style="max-width: 100%; width: 30em; height: 20em">{{ text_slide_contents }}</textarea>
-			<br />
-			<button id="update-text-slides" type="button">Update</button>
+		<p class="hint">Tap a slide to edit it, drag the handle to reorder.</p>
 
-			<div id="text-feedback"></div>
-		</form>
+		<div class="slides-list" id="slides-list"></div>
+		<button type="button" class="primary-btn" id="add-slide">+ Add Slide</button>
+
+		<textarea id="text-slides-raw" style="display: none">{{ text_slide_contents }}</textarea>
+
+		<div class="modal-backdrop" id="slide-modal-backdrop">
+			<div class="modal">
+				<div class="modal-title">Edit Slide</div>
+				<textarea class="modal-textarea" id="slide-modal-textarea" rows="6"></textarea>
+				<div class="modal-actions">
+					<button type="button" class="modal-btn secondary" id="slide-modal-cancel">Cancel</button>
+					<button type="button" class="modal-btn primary" id="slide-modal-save">Save</button>
+				</div>
+			</div>
+		</div>
+
+		<div id="toast"></div>
 
 		<script type="text/javascript">
+			var toastEl = document.getElementById("toast");
+			var toastTimeout;
+			function showToast(message) {
+				toastEl.textContent = message;
+				toastEl.classList.add("visible");
+				clearTimeout(toastTimeout);
+				toastTimeout = setTimeout(function() {
+					toastEl.classList.remove("visible");
+				}, 1600);
+			}
 
-			document.getElementById("add-points").onclick = sendScore;
-			document.getElementById("update-text-slides").onclick = sendText;
+			function applyScores(scores) {
+				Object.keys(scores).forEach(function(dorm) {
+					var el = document.querySelector('.dorm-score[data-dorm="' + CSS.escape(dorm) + '"]');
+					if (el) el.textContent = scores[dorm];
+				});
+			}
 
-			function sendScore() {
-				const params = {
-					dorm: document.getElementById("dorm").value,
-					points: document.getElementById("points-to-add").value,
-				}
-
+			function sendScore(dorm, points) {
 				var xhttp = new XMLHttpRequest();
 				xhttp.open("POST", "/score");
-				xhttp.setRequestHeader('Content-type', 'application/json');
-				xhttp.send(JSON.stringify(params));
+				xhttp.setRequestHeader("Content-type", "application/json");
 				xhttp.onload = function() {
-					response = JSON.parse(this.responseText);
-					document.getElementById("points-feedback").innerHTML = response.feedback;
-				}
+					var response = JSON.parse(this.responseText);
+					applyScores(response.scores);
+					showToast((points > 0 ? "+" : "") + points + " " + dorm);
+				};
+				xhttp.send(JSON.stringify({ dorm: dorm, points: points }));
 			}
 
-			function sendText() {
-				const params = {text: document.getElementById("text-slides").value}
+			var modalBackdrop = document.getElementById("modal-backdrop");
+			var modalDormName = document.getElementById("modal-dorm-name");
+			var modalCurrentScore = document.getElementById("modal-current-score");
+			var modalInput = document.getElementById("modal-input");
+			var modalDorm = null;
+
+			function openModal(dorm, currentScore) {
+				modalDorm = dorm;
+				modalDormName.textContent = dorm;
+				modalCurrentScore.textContent = "Current score: " + currentScore;
+				modalInput.value = "";
+				modalBackdrop.classList.add("visible");
+				// Deferred so the browser has shown the modal before we
+				// pull focus, which helps mobile keyboards open reliably.
+				setTimeout(function() { modalInput.focus(); }, 50);
+			}
+
+			function closeModal() {
+				modalBackdrop.classList.remove("visible");
+				modalDorm = null;
+			}
+
+			function confirmModal() {
+				var value = modalInput.value.trim();
+				var dorm = modalDorm;
+				closeModal();
+				if (value === "" || isNaN(parseInt(value, 10))) return;
+				sendScore(dorm, parseInt(value, 10));
+			}
+
+			document.getElementById("modal-cancel").addEventListener("click", closeModal);
+			document.getElementById("modal-confirm").addEventListener("click", confirmModal);
+			modalBackdrop.addEventListener("click", function(e) {
+				if (e.target === modalBackdrop) closeModal();
+			});
+			modalInput.addEventListener("keydown", function(e) {
+				if (e.key === "Enter") {
+					e.preventDefault();
+					confirmModal();
+				} else if (e.key === "Escape") {
+					closeModal();
+				}
+			});
+
+			Array.prototype.forEach.call(document.querySelectorAll(".dorm-row"), function(row) {
+				row.addEventListener("click", function() {
+					var scoreEl = row.querySelector(".dorm-score");
+					openModal(row.dataset.dorm, scoreEl.textContent);
+				});
+			});
+
+			// Slides are stored on disk as blocks of text separated by a
+			// line containing a single underscore.
+			var slides = document.getElementById("text-slides-raw").value.split("\n_\n");
+
+			var slidesListEl = document.getElementById("slides-list");
+
+			function saveSlides() {
 				var xhttp = new XMLHttpRequest();
 				xhttp.open("POST", "/updatetext");
-				xhttp.setRequestHeader('Content-type', 'application/json');
-				xhttp.send(JSON.stringify(params));
+				xhttp.setRequestHeader("Content-type", "application/json");
 				xhttp.onload = function() {
-					document.getElementById("text-feedback").innerHTML = "Success"
-
-				}
+					showToast("Slides updated");
+				};
+				xhttp.send(JSON.stringify({ text: slides.join("\n_\n") }));
 			}
+
+			function removeSlide(index) {
+				slides.splice(index, 1);
+				renderSlides();
+				saveSlides();
+			}
+
+			function renderSlides() {
+				slidesListEl.innerHTML = "";
+				slides.forEach(function(text, index) {
+					var lines = text.split("\n");
+
+					var tile = document.createElement("div");
+					tile.className = "slide-tile";
+					tile.dataset.index = index;
+
+					var handle = document.createElement("div");
+					handle.className = "slide-handle";
+					handle.textContent = "☰";
+					tile.appendChild(handle);
+
+					var info = document.createElement("div");
+					info.className = "slide-info";
+
+					var title = document.createElement("div");
+					title.className = "slide-title";
+					title.textContent = lines[0] || "(empty)";
+					info.appendChild(title);
+
+					if (lines.length > 1) {
+						var subtitle = document.createElement("div");
+						subtitle.className = "slide-subtitle";
+						subtitle.textContent = lines.slice(1).join(" · ");
+						info.appendChild(subtitle);
+					}
+
+					info.addEventListener("click", function() {
+						openSlideModal(index, false);
+					});
+					tile.appendChild(info);
+
+					var removeBtn = document.createElement("button");
+					removeBtn.type = "button";
+					removeBtn.className = "slide-remove";
+					removeBtn.textContent = "×";
+					removeBtn.addEventListener("click", function(e) {
+						e.stopPropagation();
+						removeSlide(index);
+					});
+					tile.appendChild(removeBtn);
+
+					attachDragHandlers(tile, handle);
+
+					slidesListEl.appendChild(tile);
+				});
+			}
+
+			// Dragging is done with Pointer Events (not native HTML5
+			// drag-and-drop) so it also works with touch on mobile.
+			var dragTile = null;
+			var dragPointerId = null;
+
+			function attachDragHandlers(tile, handle) {
+				handle.addEventListener("pointerdown", function(e) {
+					e.preventDefault();
+					dragTile = tile;
+					dragPointerId = e.pointerId;
+					tile.classList.add("dragging");
+					handle.setPointerCapture(e.pointerId);
+				});
+			}
+
+			document.addEventListener("pointermove", function(e) {
+				if (!dragTile || e.pointerId !== dragPointerId) return;
+				var over = document.elementFromPoint(e.clientX, e.clientY);
+				var overTile = over && over.closest(".slide-tile");
+				if (!overTile || overTile === dragTile) return;
+
+				var tiles = Array.prototype.slice.call(slidesListEl.children);
+				if (tiles.indexOf(overTile) < tiles.indexOf(dragTile)) {
+					slidesListEl.insertBefore(dragTile, overTile);
+				} else {
+					slidesListEl.insertBefore(dragTile, overTile.nextSibling);
+				}
+			});
+
+			function endDrag() {
+				if (!dragTile) return;
+				dragTile.classList.remove("dragging");
+
+				var newOrder = [];
+				Array.prototype.forEach.call(slidesListEl.children, function(tile) {
+					newOrder.push(slides[parseInt(tile.dataset.index, 10)]);
+				});
+				var reordered = newOrder.join("\n_\n") !== slides.join("\n_\n");
+				slides = newOrder;
+				dragTile = null;
+				dragPointerId = null;
+				renderSlides();
+				if (reordered) saveSlides();
+			}
+
+			document.addEventListener("pointerup", endDrag);
+			document.addEventListener("pointercancel", endDrag);
+
+			var slideModalBackdrop = document.getElementById("slide-modal-backdrop");
+			var slideModalTextarea = document.getElementById("slide-modal-textarea");
+			var editingSlideIndex = null;
+			var editingSlideIsNew = false;
+
+			function openSlideModal(index, isNew) {
+				editingSlideIndex = index;
+				editingSlideIsNew = !!isNew;
+				slideModalTextarea.value = slides[index];
+				slideModalBackdrop.classList.add("visible");
+				setTimeout(function() { slideModalTextarea.focus(); }, 50);
+			}
+
+			function closeSlideModal(cancelled) {
+				if (cancelled && editingSlideIsNew) {
+					slides.splice(editingSlideIndex, 1);
+					renderSlides();
+				}
+				slideModalBackdrop.classList.remove("visible");
+				editingSlideIndex = null;
+				editingSlideIsNew = false;
+			}
+
+			function saveSlideModal() {
+				slides[editingSlideIndex] = slideModalTextarea.value;
+				closeSlideModal(false);
+				renderSlides();
+				saveSlides();
+			}
+
+			document.getElementById("slide-modal-cancel").addEventListener("click", function() { closeSlideModal(true); });
+			document.getElementById("slide-modal-save").addEventListener("click", saveSlideModal);
+			slideModalBackdrop.addEventListener("click", function(e) {
+				if (e.target === slideModalBackdrop) closeSlideModal(true);
+			});
+
+			document.getElementById("add-slide").addEventListener("click", function() {
+				slides.push("");
+				renderSlides();
+				openSlideModal(slides.length - 1, true);
+			});
+
+			renderSlides();
 		</script>
 	</body>
 </html>

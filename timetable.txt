@@ -23,10 +23,10 @@
 %=====================================================
 % Latest update: 20.5.2006 by Jonathan - 2006 v3
 %=====================================================
-DT	5
-DY	8
+DT	30
+DY	7
 DO	8
-Y	2025
+Y	2026
 % Colour definitions (R,G,B from 0 to 1):
 C	0	0	0	text
 C	0	0	0	box
@@ -58,7 +58,7 @@ C	0.6	1	0.4	dorm
 % order with no gaps between them. Gaps can be made by
 % having blank 4th and 5th fields.
 %=====================================================
-----	Sat	9th	August		T
+----	Sat	8th	August		T
 % key for team
 1	T	back	Key:
 2	T	dorm	In Dorms
@@ -82,7 +82,7 @@ C	0.6	1	0.4	dorm
 3	T	out	Prayer for LW
 4	T	dining	Free time (no setup allowed!)
 %=====================================================
-----	Sun	10th	August		TYO
+----	Sun	9th	August		TYO
 % key for YP
 1	YO	back	Key:
 2	YO	dorm	In Dorms
@@ -120,13 +120,15 @@ C	0.6	1	0.4	dorm
 2	TY	dorm	Epilogue
 1	O	dorm	Dorm introductions
 3	O	lounge	Free time
-2	TYO	dorm	Time for bed
+2	YO	dorm	Time for bed
+1	T	dorm	Time for bed
+1	T	dining	Pastoral check in
 1	YO	dorm	Lights out
 2	T	dining	Dorm patrol/Team Relax
 2	T	dining	Team relax
 1	T	dorm	Sleep
 %=====================================================
-----	Mon	11th	August		TYO
+----	Mon	10th	August		TYO
 3	TYO	back
 3	YO	dorm	Wake up
 1	T	dorm	Wake up
@@ -149,13 +151,15 @@ C	0.6	1	0.4	dorm
 % Evenings get complex!
 2	TY	dorm	Epilogue
 4	O	lounge	Free time
-2	TYO	dorm	Time for bed
+2	YO	dorm	Time for bed
+1	T	dorm	Time for bed
+1	T	dining	Pastoral check in
 1	YO	dorm	Lights out
 2	T	dining	Dorm patrol/Team Relax
 2	T	dining	Team relax
 1	T	dorm	Sleep
 %=====================================================
-----	Tue	12th	August		TYO
+----	Tue	11th	August		TYO
 3	TYO	back
 3	YO	dorm	Wake up
 1	T	dorm	Wake up
@@ -178,13 +182,15 @@ C	0.6	1	0.4	dorm
 % Evenings get complex!
 2	TY	dorm	Epilogue
 4	O	lounge	Free time
-2	TYO	dorm	Time for bed
+2	YO	dorm	Time for bed
+1	T	dorm	Time for bed
+1	T	dining	Pastoral check in
 1	YO	dorm	Lights out
 2	T	dining	Dorm patrol/Team Relax
 2	T	dining	Team relax
 1	T	dorm	Sleep
 %=====================================================
-----	Wed	13th	August		TYO
+----	Wed	12th	August		TYO
 3	TYO	back
 3	YO	dorm	Wake up
 1	T	dorm	Wake up
@@ -206,36 +212,38 @@ C	0.6	1	0.4	dorm
 2	TYO	dining	Drinks
 % Evenings get complex!
 2	TY	dorm	Epilogue
-4	O	lounge	Free time
-2	TYO	dorm	Time for bed
+4	O	lounge	Grill a leader
+2	YO	dorm	Time for bed
+1	T	dorm	Time for bed
+1	T	dining	Pastoral check in
 1	YO	dorm	Lights out
 2	T	dining	Dorm patrol/Team Relax
 2	T	dining	Team relax
 1	T	dorm	Sleep
 %=====================================================
-----	Thu	14th	August		TYO
+----	Thu	13th	August		TYO
 3	TYO	back
 3	YO	dorm	Wake up
 1	T	dorm	Wake up
 2	T	dining	Pray + Team meet
-3	TYO	dining	Breakfast
+4	TYO	dining	Breakfast
+29	TYO	out	Day Out
 5	TYO	technical	Technical
-1	TYO	dining	Drinks
-27	TYO	out	Day Out
-2	TYO	out	Prep for dinner
 4	TYO	dining	Dinner
 6	TYO	hall	The Link
 2	TYO	dining	Drinks
 % Evenings get complex!
 2	TY	dorm	Epilogue
 4	O	lounge	Free time
-2	TYO	dorm	Time for bed
+2	YO	dorm	Time for bed
+1	T	dorm	Time for bed
+1	T	dining	Pastoral check in
 1	YO	dorm	Lights out
 2	T	dining	Dorm patrol/Team Relax
 2	T	dining	Team relax
 1	T	dorm	Sleep
 %=====================================================
-----	Fri	15th	August		TYO
+----	Fri	14th	August		TYO
 3	TYO	back
 3	YO	dorm	Wake up
 1	T	dorm	Wake up
@@ -258,13 +266,15 @@ C	0.6	1	0.4	dorm
 % Evenings get complex!
 2	TY	dorm	Epilogue
 4	O	lounge	Free time
-2	TYO	dorm	Time for bed
+2	YO	dorm	Time for bed
+1	T	dorm	Time for bed
+1	T	dining	Pastoral check in
 1	YO	dorm	Lights out
 2	T	dining	Dorm patrol/Team Relax
 2	T	dining	Team relax
 1	T	dorm	Sleep
 %=====================================================
-----	Sat	16th	August		TYO
+----	Sat	15th	August		TYO
 3	TYO	back
 3	YO	dorm	Wake up
 1	T	dorm	Wake up
@@ -291,7 +301,7 @@ C	0.6	1	0.4	dorm
 1	T	dining	Team prayer
 1	T	out	Continue de-rig
 %=====================================================
-----	Sun	17th	August		TYO
+----	Sun	16th	August		TYO
 2	TYO	back
 2	YO	dorm	Wake up
 1	T	dorm	Wake up
