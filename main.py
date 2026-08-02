@@ -38,7 +38,7 @@ CRUMBLE_TEXT = "Ode to a crumble\nOh, what a lovely crumble,\nOh, what a lovely 
 TIMETABLE_PATH = "timetable.txt"
 TIMETABLE_START_TIME = datetime.time(hour=7, minute=0)
 # Timetable starts on the Saturday
-TIMETABLE_START_DAY = datetime.date(year=2026, month=7, day=29)
+TIMETABLE_START_DAY = datetime.date(year=2026, month=8, day=8)
 
 def line_span(a, b):
     return a + b.rjust(LINE_LENGTH - len(a))
