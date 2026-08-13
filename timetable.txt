@@ -23,8 +23,8 @@
 %=====================================================
 % Latest update: 20.5.2006 by Jonathan - 2006 v3
 %=====================================================
-DT	30
-DY	7
+DT	9
+DY	8
 DO	8
 Y	2026
 % Colour definitions (R,G,B from 0 to 1):
@@ -226,9 +226,12 @@ C	0.6	1	0.4	dorm
 3	YO	dorm	Wake up
 1	T	dorm	Wake up
 2	T	dining	Pray + Team meet
-4	TYO	dining	Breakfast
-29	TYO	out	Day Out
-5	TYO	technical	Technical
+3	TYO	dining	Breakfast
+6	TYO	technical	Technical
+4	TYO	out	Dorm Activity
+4	TYO	dining	Lunch
+19	TYO	out	Day Out
+2	TYO	out	Prepare for dinner
 4	TYO	dining	Dinner
 6	TYO	hall	The Link
 2	TYO	dining	Drinks
